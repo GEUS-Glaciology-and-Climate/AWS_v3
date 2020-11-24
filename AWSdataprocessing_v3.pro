@@ -28,8 +28,10 @@ pro AWSdataprocessing_v3
 ;AWS = ['UPE_L','UPE_U','THU_L','THU_U','THU_U2','CEN'] ; run for a single PROMICE station
   AWS = ['EGP']                 ; run for a single PROMICE station
 
-  dir = 'D:\CentOS\AWS_PROMICE\AWS_data_PROMICE\'
-  datadir = 'data\'
+; dir = 'D:\CentOS\AWS_PROMICE\AWS_data_PROMICE\'
+; datadir = 'data\'
+  dir='../data/L0/'
+  datadir='./out/'
   version_no = '_v03'           ; Version of processing routine. Change when implementing a significant improvement / addition.
   columns_inst=53               ; Columns in inst. data file v03
   columns_hour=46               ; Columns in hourly data file v03
@@ -46,8 +48,8 @@ pro AWSdataprocessing_v3
   inst_output = 'yes' ; If 'yes', (large) data files with the same time stamps as the input data will be generated (“instantaneous” if 10-min logger data).
 
   for i_AWS=0,n_elements(AWS)-1 do begin
-     metadatafile = 'metadata\'+AWS[i_AWS]+'_metadata.csv' ; Comma-separated file with AWS information (file names, calibration coefficients, lat/lon, etc.)
-;metadatafile = 'metadata\'+AWS[i_AWS]+'_metadata1.csv' ; Comma-separated file with AWS information (file names, calibration coefficients, lat/lon, etc.)
+     metadatafile = 'metadata/'+AWS[i_AWS]+'_metadata.csv' ; Comma-separated file with AWS information (file names, calibration coefficients, lat/lon, etc.)
+;metadatafile = 'metadata/'+AWS[i_AWS]+'_metadata1.csv' ; Comma-separated file with AWS information (file names, calibration coefficients, lat/lon, etc.)
      startmetadatafile=0
      nlines_meta=FILE_LINES(dir+metadatafile)
      if (nlines_meta lt upd) then updaterun='no'
@@ -195,7 +197,7 @@ pro AWSdataprocessing_v3
            endelse
         endif
 ;  print,filename
-        openr,unit2,dir+'data_raw\'+AWS[i_AWS]+' raw\'+filename,/get_lun
+        openr,unit2,dir+AWS[i_AWS] + '/' +filename,/get_lun
         print,'File: ',filename
 ;  if lines_hdr gt 0 then for i=1,lines_hdr do readf,unit2,header
         if lines_hdr gt 0 then header = STRARR(lines_hdr) 
@@ -1427,7 +1429,7 @@ pro AWSdataprocessing_v3
         if updaterun eq 'yes' then begin
            openw,lun,dir+datadir+AWS[i_AWS]+'_inst'+version_no+'_upd.txt',/get_lun
         endif else begin
-           openw,lun,dir+datadir+AWS[i_AWS]+'_inst'+version_no+'.txt',/get_lun
+           openw,lun,datadir+AWS[i_AWS]+'_inst'+version_no+'.txt',/get_lun
         endelse
         printf,lun,' Year MonthOfYear DayOfMonth HourOfDay(UTC) MinuteOfHour DayOfYear'+ $
                ' AirPressure(hPa) AirTemperature(C) AirTemperatureHygroClip(C) RelativeHumidity_wrtWater(%) RelativeHumidity(%)'+ $
@@ -1470,7 +1472,7 @@ pro AWSdataprocessing_v3
            GPStime_h[i],GPSlat_h[i],GPSlon_h[i],GPSelev_h[i],GPShdop_h[i],Tlog_h[i],Ifan_h[i],Vbat_h[i]
         free_lun,lun1
      endif else begin
-        openw,lun1,dir+datadir+AWS[i_AWS]+'_hour'+version_no+'.txt',/get_lun
+        openw,lun1,datadir+AWS[i_AWS]+'_hour'+version_no+'.txt',/get_lun
         printf,lun1,' Year MonthOfYear DayOfMonth HourOfDay(UTC) DayOfYear DayOfCentury'+ $
                ' AirPressure(hPa) AirTemperature(C) AirTemperatureHygroClip(C) RelativeHumidity(%) SpecificHumidity(g/kg)'+ $
                ' WindSpeed(m/s) WindDirection(d) SensibleHeatFlux(W/m2) LatentHeatFlux(W/m2) ShortwaveRadiationDown(W/m2) ShortwaveRadiationDown_Cor(W/m2)'+ $
@@ -1508,7 +1510,7 @@ pro AWSdataprocessing_v3
            GPSlat_d[i],GPSlon_d[i],GPSelev_d[i],GPShdop_d[i],Tlog_d[i],Ifan_d[i],Vbat_d[i]
         free_lun,lun2
      endif else begin
-        openw,lun2,dir+datadir+AWS[i_AWS]+'_day'+version_no+'.txt',/get_lun
+        openw,lun2,datadir+AWS[i_AWS]+'_day'+version_no+'.txt',/get_lun
         printf,lun2,' Year MonthOfYear DayOfMonth DayOfYear DayOfCentury'+ $
                ' AirPressure(hPa) AirTemperature(C) AirTemperatureHygroClip(C) RelativeHumidity(%) SpecificHumidity(g/kg)'+ $
                ' WindSpeed(m/s) WindDirection(d) SensibleHeatFlux(W/m2) LatentHeatFlux(W/m2) ShortwaveRadiationDown(W/m2) ShortwaveRadiationDown_Cor(W/m2)'+ $
@@ -1539,7 +1541,7 @@ pro AWSdataprocessing_v3
            LRin_m[i],LRout_m[i],Haws_m[i],GPSlat_m[i],GPSlon_m[i],GPSelev_m[i],fanOK_m[i]
         free_lun,lun3
      endif else begin
-        openw,lun3,dir+datadir+AWS[i_AWS]+'_month'+version_no+'.txt',/get_lun
+        openw,lun3,datadir+AWS[i_AWS]+'_month'+version_no+'.txt',/get_lun
         printf,lun3,' Year MonthOfYear MonthOfCentury'+ $
                ' AirPressure(hPa) AirTemperature(C) AirTemperatureHygroClip(C) RelativeHumidity(%) SpecificHumidity(g/kg)'+ $
                ' WindSpeed(m/s) WindDirection(d) SensibleHeatFlux(W/m2) LatentHeatFlux(W/m2) ShortwaveRadiationDown(W/m2) ShortwaveRadiationDown_Cor(W/m2)' + $
