@@ -12,7 +12,7 @@
 ; make z0 site/season/surface-type-specific
 ; improve CloudCov calculation -> make site-specific or lat/elev dependent
 ; revisit tilt correction of SR or use the correction by Wang et al (TC, 2016)
-; include netCDF outputing (wait for Charlie Zender's information on JAWS?)
+; include netCDF output (support JAWS?)
 ; correct for shadow effects from the station frame itself 
 
 ;------------------------------------------------------------------------------------------------------------------------------
