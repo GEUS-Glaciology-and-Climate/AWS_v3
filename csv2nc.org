@@ -1,0 +1,578 @@
+#+PROPERTY: header-args:python+ :results output :exports code :session csv2nc :results none
+#+PROPERTY: header-args:python+ :python /home/kdm/local/miniconda3/envs/PROMICE_dev/bin/python
+#+PROPERTY: header-args:python+ :tangle no
+#+PROPERTY: header-args:bash+ :results verbatim :exports results
+
+* Table of contents                               :toc_2:noexport:
+- [[#introduction][Introduction]]
+  - [[#cf-metadata][CF metadata]]
+  - [[#acdd-metadata][ACDD metadata]]
+- [[#csv-to-netcdf-example][CSV to NetCDF (example)]]
+- [[#csv-to-netcdf][CSV to NetCDF]]
+
+* Introduction
+
+This workbook implements CSV to NetCDF conversion for the PROMICE AWS v3 data products. Converting from CSV to basic NetCDF is trivial, but here we make sure to make CF- and ACDD- compliant NetCDF files.
+
+** CF metadata
+
+CF (Climate and Forecast) metadata improve [[https://www.go-fair.org/fair-principles/][FAIR principles]]. The CF standards are documented at https://cfconventions.org/. CF conventions require re-naming the CSV header columns, and adding =standard_name=, =long_name=, =units=, and other metadata. We create and use the [[./variables.csv]] file to associated properties with each CSV column, and use these properties to create the NetCDF file.
+
+The [[./variables.csv]] file is included below:
+
+#+BEGIN_SRC bash :results table :post add_header_row(tbl=*this*)
+cat variables.csv
+#+END_SRC
+
+#+RESULTS:
+| CSV_column                             | field          | standard_name                                        | long_name                                         | units   |
+|----------------------------------------+----------------+------------------------------------------------------+---------------------------------------------------+---------|
+| AirPressure(hPa)                       | p              | air_pressure                                         | Air pressure                                      | hPa     |
+| AirTemperature(C)                      | t_1            | air_temperature                                      | Air temperature 1                                 | C       |
+| AirTemperatureHygroClip(C)             | t_2            | air_temperature                                      | Air temperature 2                                 | C       |
+| RelativeHumidity(%)                    | rh             | relative_humidity                                    | Relative humidity                                 | %       |
+| WindSpeed(m/s)                         | wspd           | wind_speed                                           | Wind speed                                        | m s-1   |
+| WindDirection(d)                       | wdir           | wind_from_direction                                  | Wind from direction                               | degrees |
+| ShortwaveRadiationDown(W/m2)           | dsr            | surface_downwelling_shortwave_flux                   | Downwelling shortwave radiation                   | W m-2   |
+| ShortwaveRadiationDownCorrectionFactor | dsr_cor_factor | surface_downwelling_shortwave_flux_correction_factor | Downwelling shortwave radiation correction factor |         |
+| ShortwaveRadiationDown_Cor(W/m2)       | dsr_cor        | surface_downwelling_shortwave_flux_corrected         | Downwelling shortwave radiation corrected         | W m-2   |
+| ShortwaveRadiationUp(W/m2)             | usr            | surface_upwelling_shortwave_flux                     | Upwelling shortwave radiation                     | W m-2   |
+| ShortwaveRadiationUp_Cor(W/m2)         | usr_cor        | surface_upwelling_shortwave_flux_corrected           | Upwelling shortwave radiation corrected           | W m-2   |
+| LongwaveRadiationDown(W/m2)            | dlr            | surface_downwelling_longwave_flux                    | Downwelling longwave radiation                    | W m-2   |
+| LongwaveRadiationUp(W/m2)              | ulr            | surface_upwelling_longwave_flux                      | Upwelling longwave radiation                      | W m-2   |
+| TemperatureRadiometer(C)               | t_rad          | temperature_of_radiation_sensor                      | Radiation sensor temperature                      | C       |
+| HeightSensorBoom(m)                    | z_boom         | distance_to_surface_from_boom                        | Boom height                                       | m       |
+| HeightSensorBoomQuality                | z_boom_q       | distance_to_surface_from_boom_quality                | Boom height (quality)                             |         |
+| HeightStakes(m)                        | z_stake        | distance_to_surface_from_stake_assembly              | Stake height                                      | m       |
+| HeightStakesQuality                    | z_stake_q      | distance_to_surface_from_stake_assembly_quality      | Stake height (quality)                            |         |
+| DepthPressureTransducer(m)             | z_pt           | depth_of_pressure_transducer_in_ice                  | Depth of pressure transducer in ice               | m       |
+| DepthPressureTransducer_Cor(m)         | z_pt_cor       | depth_of_pressure_transducer_in_ice_corrected        | Depth of pressure transducer in ice corrected     | m       |
+| AblationPressureTransducer(mm)         | ablation_pt    | ablation_pt                                          | Ablation from pressure transducer                 | mm      |
+| IceTemperature1(C)                     | t_i_1          | ice_temperature_at_t1                                | Ice temperature at sensor 1                       | C       |
+| IceTemperature2(C)                     | t_i_2          | ice_temperature_at_t2                                | Ice temperature at sensor 2                       | C       |
+| IceTemperature3(C)                     | t_i_3          | ice_temperature_at_t3                                | Ice temperature at sensor 3                       | C       |
+| IceTemperature4(C)                     | t_i_4          | ice_temperature_at_t4                                | Ice temperature at sensor 4                       | C       |
+| IceTemperature5(C)                     | t_i_5          | ice_temperature_at_t5                                | Ice temperature at sensor 5                       | C       |
+| IceTemperature6(C)                     | t_i_6          | ice_temperature_at_t6                                | Ice temperature at sensor 6                       | C       |
+| IceTemperature7(C)                     | t_i_7          | ice_temperature_at_t7                                | Ice temperature at sensor 7                       | C       |
+| IceTemperature8(C)                     | t_i_8          | ice_temperature_at_t8                                | Ice temperature at sensor 8                       | C       |
+| TiltToEast(d)                          | tilt_x         | platform_view_angle_x                                | Tilt to east                                      | degrees |
+| TiltToNorth(d)                         | tilt_y         | platform_view_angle_y                                | Tilt to north                                     | degrees |
+| TimeGPS(hhmmssUTC)                     | gps_time       | gps_time                                             | GPS time                                          | s       |
+| LatitudeGPS(degN)                      | gps_lat        | gps_latitude                                         | Latitude                                          | degrees |
+| LatitudeGPS_HDOP<1(degN)               | gps_lat_hdop_1 | gps_latitude_hdop_1                                  | Latitude when HDOP less than 1                    | degrees |
+| LongitudeGPS(degW)                     | gps_lon        | gps_longitude                                        | Longitude                                         | degrees |
+| LongitudeGPS_HDOP<1(degW)              | gps_lon_hdop_1 | gps_longitude_hdop_1                                 | Longitude when HDOP less than 1                   | degrees |
+| ElevationGPS(m)                        | gps_alt        | gps_altitude                                         | Altitude                                          | m       |
+| ElevationGPS_HDOP<1(m)                 | gps_alt_hdop_1 | gps_altitude_hdop_1                                  | Altitude when HDOP less than 1                    | m       |
+| HorDilOfPrecGPS                        | gps_hdop       | gps_hdop                                             | GPS horizontal dillution of preciosion (HDOP)     | m       |
+| HorDilOfPrecGPS_HDOP<1                 | gps_hdop_1     | gps_hdop_1                                           | GPS HDOP when HDOP less than 1                    | m       |
+| LoggerTemperature(C)                   | t_log          | temperature_of_logger                                | Logger temperature                                | C       |
+| FanCurrent(mA)                         | fan_dc         | fan_current                                          | Fan current                                       | mA      |
+| FanOK(%)                               | fan_ok         | fan_ok                                               | Fan OK                                            | %       |
+| BatteryVoltage(V)                      | batt_v         | battery_voltage                                      | Battery voltage                                   | V       |
+| SensibleHeatFlux(W/m2)                 | dshf           | surface_downward_sensible_heat_flux                  | Sensible heat flux                                | W m-2   |
+| LatentHeatFlux(W/m2)                   | dlhf           | surface_downward_latent_heat_flux                    | Latent heat flux                                  | W m-2   |
+| Albedo                                 | albedo         | surface_albedo                                       | Albedo                                            |         |
+| Albedo_theta<70d                       | albedo_70      | surface_albedo_70                                    | Albedo when theta less than 70 degrees            |         |
+| CloudCover                             | cc             | cloud_area_fraction                                  | Cloud cover                                       | %       |
+| SurfaceTemperature(C)                  | t_surf         | surface_temperature                                  | Surface temperature                               | C       |
+| RelativeHumidity_wrtWater(%)           | rh_cor         | relative_humidity                                    | Relative humidity (corrected)                     | %       |
+| SpecificHumidity(g/kg)                 | sh             | specific_humidity                                    | Specific humidity                                 | g kg-1  |
+| ZenithAngleSun(d)                      | sza            | solar_zenith_angle                                   | Solar zenith angle                                | degrees |
+| DirectionSun(d)                        | sun_dir        | sun_direction                                        | Direction to sun                                  | degrees |
+| TiltAWS(d)                             | tilt           | platform_view_angle                                  | Tilt                                              | degrees |
+| TiltDirectionAWS(d)                    | tilt_direction | platform_tilt_direction                              | Tilt direction                                    | degrees |
+| AngleBetweenSunAndAWS(d)               |                |                                                      |                                                   |         |
+
+** ACDD metadata
+
+ACDD metadata are documented at https://gcw.met.no/node/4. We use the following values, implemented in the code below.
+
+| Attribute           |                                                         |
+|---------------------+---------------------------------------------------------|
+| id                  | AWS_v3                                                  |
+| naming_authority    | dk.promice                                              |
+| title               | PROMICE AWS data                                        |
+| summary             | PROMICE AWS data                                        |
+| keywords            | PROMICE, AWS, Greenland, weather station                |
+| geospatial_lat_min  | [From data]                                             |
+| geospatial_lat_max  | [From data]                                             |
+| geospatial_lon_min  | [From data]                                             |
+| geospatial_lon_max  | [From data]                                             |
+| geospatial_lon_min  | [From data]                                             |
+| time_coverage_start | [From data]                                             |
+| time_coverage_end   | [From data]                                             |
+| Conventions         | ACDD-1.3, CF-1.7                                        |
+| history             | [From code]                                             |
+| source              | PROMICE AWS L3 processing scripts. Git hash [from code] |
+| processing_level    | Level 3 NetCDF conversion from CSV output               |
+| date_created        | [From code]                                             |
+| creator_type        | person                                                  |
+| creator_institution | GEUS                                                    |
+| creator_name        | Ken Mankoff                                             |
+| creator_email       | kdm@geus.dk                                             |
+| creator_url         | http://kenmankoff.com                                   |
+| institution         | GEUS                                                    |
+| publisher_name      | Ken Mankoff                                             |
+| publisher_email     | kdm@geus.dk                                             |
+| publisher_url       | http://promice.dk                                       |
+| project             | PROMICE                                                 |
+
+
+* CSV to NetCDF (example)
+:PROPERTIES:
+:CUSTOM_ID: csv-to-netcdf-example
+:END:
+
+Here we implement the code with one example file.
+
+#+NAME: imports
+#+BEGIN_SRC python
+import numpy as np
+import pandas as pd
+import xarray as xr
+import datetime
+import glob
+import os
+#+END_SRC
+
+PROMICE AWS L3 CSV files can be read with the following, complicated only by the format of the AWS txt files (e.g. leading whitespace, date formats not ISO-8601).
+
+#+NAME: load_L3_CSV
+#+BEGIN_SRC python :var fname = "./out/EGP_hour_v03.txt"
+df = pd.read_csv(fname,
+                 delimiter="\s+",
+                 parse_dates={'time':[0,1,2,3]},
+                 infer_datetime_format=True,
+                 date_parser=lambda y,m,d,h: datetime.datetime(int(y),int(m),int(d),int(h)),
+                 index_col=0)
+
+df = df.replace(-999, np.nan)
+#+END_SRC
+
+Then, using the [[./variables.csv]] look-up table (LUT) we can
+
+#+NAME: load_LUT
+#+BEGIN_SRC python :results none
+
+# load CSV to NetCDF lookup variable lookup table
+v = pd.read_csv('./variables.csv', index_col=0)
+vf = v.set_index('field')
+#+END_SRC
+
+Drop unused columns:
+
+#+NAME: drop_unused_columns
+#+BEGIN_SRC python
+
+# Drop unused columns
+for c in df.columns:
+    if c not in v.index: df.drop(columns=c, inplace=True)
+#+END_SRC
+
+And rename remaining columns.
+
+#+NAME: rename_columns
+#+BEGIN_SRC python
+
+# Rename columns to CF standards
+df.columns = [v.loc[c]['field'] for c in df.columns]
+#+END_SRC
+
+Convert from Pandas dataframe to xarray dataset is trivial:
+
+#+NAME: pandas2xarray
+#+BEGIN_SRC python
+
+# Convert from pandas to xarray
+ds = xr.Dataset(df)
+#+END_SRC
+
+Adding metadata for each variable uses a modified version of the [[./variables.csv]] loaded above.
+
+#+NAME: CF_metadata
+#+BEGIN_SRC python
+
+# Add CF metdata
+for k in ds.keys():
+    ds[k].attrs['standard_name'] = vf.loc[k]['standard_name']
+    ds[k].attrs['long_name'] = vf.loc[k]['long_name']
+    ds[k].attrs['units'] = vf.loc[k]['units']
+
+# Also add metadat for 'time' variable'
+ds['time'].attrs['standard_name'] = 'time'
+ds['time'].attrs['long_name'] = 'time'
+#+END_SRC
+
+Add ACDD metadata
+
+#+NAME: ACDD_metadata
+#+BEGIN_SRC python
+
+# Add ACDD metadata
+ds.attrs['id'] = 'AWS_v3'
+ds.attrs['naming_authority'] = 'dk.promice'
+ds.attrs['title'] = 'PROMICE AWS data'
+ds.attrs['summary'] = 'PROMICE AWS data'
+ds.attrs['keywords'] = 'PROMICE, AWS, Greenland, weather station'
+ds.attrs['geospatial_lat_min'] = ds['gps_lat'].min().values
+ds.attrs['geospatial_lat_max'] = ds['gps_lat'].max().values
+ds.attrs['geospatial_lon_min'] = ds['gps_lon'].min().values
+ds.attrs['geospatial_lon_max'] = ds['gps_lon'].max().values
+ds.attrs['time_coverage_start'] = str(ds['time'][0].values)
+ds.attrs['time_coverage_end'] = str(ds['time'][-1].values)
+ds.attrs['Conventions'] = 'ACDD-1.3, CF-1.7'
+ds.attrs['history'] = 'csv2.nc.py'
+ds.attrs['source'] = 'PROMICE AWS L3 processing scripts'
+ds.attrs['processing_level'] = 'Level 3 NetCDF conversion from CSV output'
+ds.attrs['date_created'] = str(datetime.datetime.now().isoformat())
+ds.attrs['creator_type'] = 'person'
+ds.attrs['creator_institution'] = 'GEUS'
+ds.attrs['creator_name'] = 'Ken Mankoff'
+ds.attrs['creator_email'] = 'kdm@geus'
+ds.attrs['creator_url'] = 'http://kenmankoff.com'
+ds.attrs['institution'] = 'GEUS'
+ds.attrs['publisher_name'] = 'Ken Mankoff'
+ds.attrs['publisher_email'] = 'kdm@geus.dk'
+ds.attrs['publisher_url'] = 'http://promice.dk'
+ds.attrs['project'] = 'PROMICE'
+#+END_SRC
+
+#+RESULTS:
+
+Save to file
+
+#+BEGIN_SRC python
+ds.to_netcdf('aws.nc')
+#+END_SRC
+
+#+RESULTS:
+
+With the resulting NetCDF file, here showing the top and few lines from =ncdump=
+
+#+BEGIN_SRC bash :exports results
+ncdump -ch aws.nc | head -n12
+echo "..."
+ncdump -ch aws.nc | tail -n34
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+netcdf aws {
+dimensions:
+	time = 23640 ;
+variables:
+	int64 time(time) ;
+		time:units = "hours since 2016-05-01 00:00:00" ;
+		time:calendar = "proleptic_gregorian" ;
+	double p(time) ;
+		p:_FillValue = NaN ;
+		p:standard_name = "air_pressure" ;
+		p:long_name = "Air pressure" ;
+		p:units = "hPa" ;
+...
+	double batt_v(time) ;
+		batt_v:_FillValue = NaN ;
+		batt_v:standard_name = "battery_voltage" ;
+		batt_v:long_name = "Battery voltage" ;
+		batt_v:units = "V" ;
+
+// global attributes:
+		:id = "AWS_v3" ;
+		:naming_authority = "dk.promice" ;
+		:title = "PROMICE AWS data" ;
+		:summary = "PROMICE AWS data" ;
+		:keywords = "PROMICE, AWS, Greenland, weather station" ;
+		:geospatial_lat_min = 75.6245223 ;
+		:geospatial_lat_max = 75.6253575 ;
+		:geospatial_lon_min = 35.9729882 ;
+		:geospatial_lon_max = 35.9752063 ;
+		:time_coverage_start = "2016-05-01T00:00:00.000000000" ;
+		:time_coverage_end = "2019-01-10T23:00:00.000000000" ;
+		:Conventions = "ACDD-1.3, CF-1.7" ;
+		:history = "csv2.nc.py" ;
+		:source = "PROMICE AWS L3 processing scripts" ;
+		:processing_level = "Level 3 NetCDF conversion from CSV output" ;
+		:date_created = "2021-05-20T08:23:42.312199" ;
+		:creator_type = "person" ;
+		:creator_institution = "GEUS" ;
+		:creator_name = "Ken Mankoff" ;
+		:creator_email = "kdm@geus" ;
+		:creator_url = "http://kenmankoff.com" ;
+		:institution = "GEUS" ;
+		:publisher_name = "Ken Mankoff" ;
+		:publisher_email = "kdm@geus.dk" ;
+		:publisher_url = "http://promice.dk" ;
+		:project = "PROMICE" ;
+}
+#+end_example
+
+CF compliance check with =cfchecks= utility:
+
+#+BEGIN_SRC bash :exports results
+source  /home/kdm/local/miniconda3/etc/profile.d/conda.sh
+conda activate PROMICE_dev
+cfchecks aws.nc | cat
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+CHECKING NetCDF FILE: aws.nc
+=====================
+Using CF Checker Version 4.0.0
+Checking against CF Version CF-1.7
+Using Standard Name Table Version 77 (2021-01-19T13:38:50Z)
+Using Area Type Table Version 10 (23 June 2020)
+Using Standardized Region Name Table Version 4 (18 December 2018)
+
+
+------------------
+Checking variable: time
+------------------
+WARN: (3): No standard_name or long_name attribute specified
+
+------------------
+Checking variable: p
+------------------
+
+------------------
+Checking variable: t_1
+------------------
+ERROR: (3.1): Units are not consistent with those given in the standard_name table.
+
+------------------
+Checking variable: t_2
+------------------
+ERROR: (3.1): Units are not consistent with those given in the standard_name table.
+
+------------------
+Checking variable: rh
+------------------
+
+------------------
+Checking variable: sh
+------------------
+
+------------------
+Checking variable: wspd
+------------------
+
+------------------
+Checking variable: wdir
+------------------
+
+------------------
+Checking variable: dshf
+------------------
+
+------------------
+Checking variable: dlhf
+------------------
+
+------------------
+Checking variable: dsr
+------------------
+
+------------------
+Checking variable: dsr_cor
+------------------
+ERROR: (3.3): Invalid standard_name: surface_downwelling_shortwave_flux_corrected
+
+------------------
+Checking variable: usr
+------------------
+
+------------------
+Checking variable: usr_cor
+------------------
+ERROR: (3.3): Invalid standard_name: surface_upwelling_shortwave_flux_corrected
+
+------------------
+Checking variable: albedo_70
+------------------
+ERROR: (3.3): Invalid standard_name: surface_albedo_70
+ERROR: Attribute units of incorrect type (expecting 'String' type, got 'Numeric' type)
+ERROR: (3.1): units attribute must be of type 'String'
+
+------------------
+Checking variable: dlr
+------------------
+
+------------------
+Checking variable: ulr
+------------------
+
+------------------
+Checking variable: cc
+------------------
+
+------------------
+Checking variable: t_surf
+------------------
+ERROR: (3.1): Units are not consistent with those given in the standard_name table.
+
+------------------
+Checking variable: z_boom
+------------------
+ERROR: (3.3): Invalid standard_name: distance_to_surface_from_boom
+
+------------------
+Checking variable: z_stake
+------------------
+ERROR: (3.3): Invalid standard_name: distance_to_surface_from_stake_assembly
+
+------------------
+Checking variable: z_pt
+------------------
+ERROR: (3.3): Invalid standard_name: depth_of_pressure_transducer_in_ice
+
+------------------
+Checking variable: z_pt_cor
+------------------
+ERROR: (3.3): Invalid standard_name: depth_of_pressure_transducer_in_ice_corrected
+
+------------------
+Checking variable: t_i_1
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t1
+
+------------------
+Checking variable: t_i_2
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t2
+
+------------------
+Checking variable: t_i_3
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t3
+
+------------------
+Checking variable: t_i_4
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t4
+
+------------------
+Checking variable: t_i_5
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t5
+
+------------------
+Checking variable: t_i_6
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t6
+
+------------------
+Checking variable: t_i_7
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t7
+
+------------------
+Checking variable: t_i_8
+------------------
+ERROR: (3.3): Invalid standard_name: ice_temperature_at_t8
+
+------------------
+Checking variable: tilt_x
+------------------
+ERROR: (3.3): Invalid standard_name: platform_view_angle_x
+
+------------------
+Checking variable: tilt_y
+------------------
+ERROR: (3.3): Invalid standard_name: platform_view_angle_y
+
+------------------
+Checking variable: gps_time
+------------------
+ERROR: (3.3): Invalid standard_name: gps_time
+
+------------------
+Checking variable: gps_lat
+------------------
+ERROR: (3.3): Invalid standard_name: gps_latitude
+
+------------------
+Checking variable: gps_lon
+------------------
+ERROR: (3.3): Invalid standard_name: gps_longitude
+
+------------------
+Checking variable: gps_alt
+------------------
+ERROR: (3.3): Invalid standard_name: gps_altitude
+
+------------------
+Checking variable: gps_hdop
+------------------
+ERROR: (3.3): Invalid standard_name: gps_hdop
+
+------------------
+Checking variable: t_log
+------------------
+ERROR: (3.3): Invalid standard_name: temperature_of_logger
+
+------------------
+Checking variable: fan_dc
+------------------
+ERROR: (3.3): Invalid standard_name: fan_current
+
+------------------
+Checking variable: batt_v
+------------------
+ERROR: (3.3): Invalid standard_name: battery_voltage
+
+ERRORS detected: 30
+WARNINGS given: 1
+INFORMATION messages: 0
+#+end_example
+
+The results are not entirely CF-compliant.
++ Units can be fixed by =K = C - 273.15=
++ Standard names are limited by the [[http://cfconventions.org/Data/cf-standard-names/75/build/cf-standard-name-table.html][existing vocabulary]]. We have tried to follow the [[http://cfconventions.org/Data/cf-standard-names/docs/guidelines.html][guidelines]] for constructing new names.
+
+
+* CSV to NetCDF
+
+Using the above [[#csv-to-netcdf-example]] template, we do the same thing but with the following additions:
+
+Loop through each station
+
+#+BEGIN_SRC python :tangle csv2nc.py
+<<imports>>
+<<load_LUT>>
+
+# For each CSV file...
+CSV_list = glob.glob('./out/*hour*')
+nc_list = [_.split('/')[-1].split('.txt')[0][:-4][:-5]+'.nc' for _ in CSV_list]
+for fname,ncname in zip(CSV_list, nc_list):
+    print(f'Generating {ncname} from {fname}')
+    <<process_file>>
+    ds.to_netcdf('./out/'+ncname)
+    
+#+END_SRC
+
+And convert all variables with units =C= to =K=.
+#+NAME: C2K
+#+BEGIN_SRC python
+for k in ds.keys(): # for each var
+        if ds[k].attrs['units'] == 'C':
+            attrs = ds[k].attrs
+            ds[k] = ds[k] - 273.15
+            attrs['units'] = 'K'
+            ds[k].attrs = attrs
+#+END_SRC
+
+Where =<<process_file>>= is
+
+#+NAME: process_file
+#+BEGIN_SRC python
+<<load_L3_CSV>>
+<<drop_unused_columns>>
+<<rename_columns>>
+<<pandas2xarray>>
+<<CF_metadata>>
+<<C2K>>
+<<ACDD_metadata>>
+#+END_SRC
+

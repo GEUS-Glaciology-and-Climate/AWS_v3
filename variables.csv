@@ -1,0 +1,58 @@
+CSV_column,field,standard_name,long_name,units
+AirPressure(hPa),p,air_pressure,Air pressure,hPa
+AirTemperature(C),t_1,air_temperature,Air temperature 1,C
+AirTemperatureHygroClip(C),t_2,air_temperature,Air temperature 2,C
+RelativeHumidity(%),rh,relative_humidity,Relative humidity,%
+WindSpeed(m/s),wspd,wind_speed,Wind speed,m s-1
+WindDirection(d),wdir,wind_from_direction,Wind from direction,degrees
+ShortwaveRadiationDown(W/m2),dsr,surface_downwelling_shortwave_flux,Downwelling shortwave radiation,W m-2
+ShortwaveRadiationDownCorrectionFactor,dsr_cor_factor,surface_downwelling_shortwave_flux_correction_factor,Downwelling shortwave radiation correction factor,
+ShortwaveRadiationDown_Cor(W/m2),dsr_cor,surface_downwelling_shortwave_flux_corrected,Downwelling shortwave radiation corrected,W m-2
+ShortwaveRadiationUp(W/m2),usr,surface_upwelling_shortwave_flux,Upwelling shortwave radiation,W m-2
+ShortwaveRadiationUp_Cor(W/m2),usr_cor,surface_upwelling_shortwave_flux_corrected,Upwelling shortwave radiation corrected,W m-2
+LongwaveRadiationDown(W/m2),dlr,surface_downwelling_longwave_flux,Downwelling longwave radiation,W m-2
+LongwaveRadiationUp(W/m2),ulr,surface_upwelling_longwave_flux,Upwelling longwave radiation,W m-2
+TemperatureRadiometer(C),t_rad,temperature_of_radiation_sensor,Radiation sensor temperature,C
+HeightSensorBoom(m),z_boom,distance_to_surface_from_boom,Boom height,m
+HeightSensorBoomQuality,z_boom_q,distance_to_surface_from_boom_quality,Boom height (quality),
+HeightStakes(m),z_stake,distance_to_surface_from_stake_assembly,Stake height,m
+HeightStakesQuality,z_stake_q,distance_to_surface_from_stake_assembly_quality,Stake height (quality),
+DepthPressureTransducer(m),z_pt,depth_of_pressure_transducer_in_ice,Depth of pressure transducer in ice,m
+DepthPressureTransducer_Cor(m),z_pt_cor,depth_of_pressure_transducer_in_ice_corrected,Depth of pressure transducer in ice corrected,m
+AblationPressureTransducer(mm),ablation_pt,ablation_pt,Ablation from pressure transducer,mm
+IceTemperature1(C),t_i_1,ice_temperature_at_t1,Ice temperature at sensor 1,C
+IceTemperature2(C),t_i_2,ice_temperature_at_t2,Ice temperature at sensor 2,C
+IceTemperature3(C),t_i_3,ice_temperature_at_t3,Ice temperature at sensor 3,C
+IceTemperature4(C),t_i_4,ice_temperature_at_t4,Ice temperature at sensor 4,C
+IceTemperature5(C),t_i_5,ice_temperature_at_t5,Ice temperature at sensor 5,C
+IceTemperature6(C),t_i_6,ice_temperature_at_t6,Ice temperature at sensor 6,C
+IceTemperature7(C),t_i_7,ice_temperature_at_t7,Ice temperature at sensor 7,C
+IceTemperature8(C),t_i_8,ice_temperature_at_t8,Ice temperature at sensor 8,C
+TiltToEast(d),tilt_x,platform_view_angle_x,Tilt to east,degrees
+TiltToNorth(d),tilt_y,platform_view_angle_y,Tilt to north,degrees
+TimeGPS(hhmmssUTC),gps_time,gps_time,GPS time,s
+LatitudeGPS(degN),gps_lat,gps_latitude,Latitude,degrees
+LatitudeGPS_HDOP<1(degN),gps_lat_hdop_1,gps_latitude_hdop_1,Latitude when HDOP less than 1,degrees
+LongitudeGPS(degW),gps_lon,gps_longitude,Longitude,degrees
+LongitudeGPS_HDOP<1(degW),gps_lon_hdop_1,gps_longitude_hdop_1,Longitude when HDOP less than 1,degrees
+ElevationGPS(m),gps_alt,gps_altitude,Altitude,m
+ElevationGPS_HDOP<1(m),gps_alt_hdop_1,gps_altitude_hdop_1,Altitude when HDOP less than 1,m
+HorDilOfPrecGPS,gps_hdop,gps_hdop,GPS horizontal dillution of preciosion (HDOP),m
+HorDilOfPrecGPS_HDOP<1,gps_hdop_1,gps_hdop_1,GPS HDOP when HDOP less than 1,m
+LoggerTemperature(C),t_log,temperature_of_logger,Logger temperature,C
+FanCurrent(mA),fan_dc,fan_current,Fan current,mA
+FanOK(%),fan_ok,fan_ok,Fan OK,%
+BatteryVoltage(V),batt_v,battery_voltage,Battery voltage,V
+SensibleHeatFlux(W/m2),dshf,surface_downward_sensible_heat_flux,Sensible heat flux,W m-2
+LatentHeatFlux(W/m2),dlhf,surface_downward_latent_heat_flux,Latent heat flux,W m-2
+Albedo,albedo,surface_albedo,Albedo,
+Albedo_theta<70d,albedo_70,surface_albedo_70,Albedo when theta less than 70 degrees,
+CloudCover,cc,cloud_area_fraction,Cloud cover,%
+SurfaceTemperature(C),t_surf,surface_temperature,Surface temperature,C
+RelativeHumidity_wrtWater(%),rh_cor,relative_humidity,Relative humidity (corrected),%
+SpecificHumidity(g/kg),sh,specific_humidity,Specific humidity,g kg-1
+ZenithAngleSun(d),sza,solar_zenith_angle,Solar zenith angle,degrees
+DirectionSun(d),sun_dir,sun_direction,Direction to sun,degrees
+TiltAWS(d),tilt,platform_view_angle,Tilt,degrees
+TiltDirectionAWS(d),tilt_direction,platform_tilt_direction,Tilt direction,degrees
+AngleBetweenSunAndAWS(d),,,,
