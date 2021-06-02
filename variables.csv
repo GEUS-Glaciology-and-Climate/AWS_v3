@@ -31,11 +31,11 @@ IceTemperature8(C),t_i_8,ice_temperature_at_t8,Ice temperature at sensor 8,C
 TiltToEast(d),tilt_x,platform_view_angle_x,Tilt to east,degrees
 TiltToNorth(d),tilt_y,platform_view_angle_y,Tilt to north,degrees
 TimeGPS(hhmmssUTC),gps_time,gps_time,GPS time,s
-LatitudeGPS(degN),gps_lat,gps_latitude,Latitude,degrees
-LatitudeGPS_HDOP<1(degN),gps_lat_hdop_1,gps_latitude_hdop_1,Latitude when HDOP less than 1,degrees
-LongitudeGPS(degW),gps_lon,gps_longitude,Longitude,degrees
-LongitudeGPS_HDOP<1(degW),gps_lon_hdop_1,gps_longitude_hdop_1,Longitude when HDOP less than 1,degrees
-ElevationGPS(m),gps_alt,gps_altitude,Altitude,m
+LatitudeGPS(degN),gps_lat,latitude,Latitude,degrees_north
+LatitudeGPS_HDOP<1(degN),gps_lat_hdop_1,gps_latitude_hdop_1,Latitude when HDOP less than 1,degrees_north
+LongitudeGPS(degW),gps_lon,longitude,Longitude,degrees_WEST
+LongitudeGPS_HDOP<1(degW),gps_lon_hdop_1,gps_longitude_hdop_1,Longitude when HDOP less than 1,degrees_east
+ElevationGPS(m),gps_alt,altitude,Altitude,meters
 ElevationGPS_HDOP<1(m),gps_alt_hdop_1,gps_altitude_hdop_1,Altitude when HDOP less than 1,m
 HorDilOfPrecGPS,gps_hdop,gps_hdop,GPS horizontal dillution of preciosion (HDOP),m
 HorDilOfPrecGPS_HDOP<1,gps_hdop_1,gps_hdop_1,GPS HDOP when HDOP less than 1,m
